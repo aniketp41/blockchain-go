@@ -14,13 +14,55 @@ Later revisions added a CLI support using Golang's builtin `os.Args` package.
   <img src="images/second.gif" width="440" height="400" />
 </p>
 
+## Blockchain-CLI
+
+The functionality to create custom transactions and store them as a ledger was
+introduced after [66b9b8d](https://github.com/aniketp/blockchain/tree/66b9b8d9d4728b12bd4bb8a940f9fd6ea6485163).
+
+### Dependencies
+```
+ $ go get github.com/boltdb/bolt
+ $ go get github.com/eiannone/keyboard
+```
+
+### Installation & Usage
+``` bash
+ ▶ go build
+
+ Usage: blockchain [addblock] [printchain ...]
+```
+Initialize a blockchain database. Then add blocks or view the existing records.
+``` bash
+ ▶ ./blockchain addblock -data "Gangadhar he Shaktimaan hai"
+ Mining the block containing "Genesis Block"
+ 00001296932b2c21660b44e6d61e90f2b8733ea6de3cd50ab605acdfc4499e49
+
+ Mining the block containing "Gangadhar he Shaktimaan hai"
+ 000010f6cd380c3440cb0d9254f044569e4c67f444306d709f3c70180b4fff32
+
+ Success!
+```
+``` bash
+ ▶ ./blockchain printchain
+ Prev. hash: 00001296932b2c21660b44e6d61e90f2b8733ea6de3cd50ab605acdfc4499e49
+ Data: Gangadhar he Shaktimaan hai
+ Hash: 000010f6cd380c3440cb0d9254f044569e4c67f444306d709f3c70180b4fff32
+ PoW: true
+
+ Prev. hash:
+ Data: Genesis Block
+ Hash: 00001296932b2c21660b44e6d61e90f2b8733ea6de3cd50ab605acdfc4499e49
+ PoW: true
+
+```
+
 ### Hashing algorithm
 
-Current restriction on calculating hashes is to have a certain length of 0s (18 as of now, see [here](https://www.blockchain.com/btc/block/000000000000000000e907ebdb890c7f46c0649829b60e98ff5cb5e2b83fcc77)) in the beginning of a hash value. However, it is technically impossible
+Current restriction on calculating block hash is to have a certain length of 0s (18 as of now, see [here](https://www.blockchain.com/btc/block/000000000000000000e907ebdb890c7f46c0649829b60e98ff5cb5e2b83fcc77)) at the beginning. However, it is technically impossible
 to calculate reasonable amount of hashes in a minute (generally takes years). Keeping
-that in mind, I've set the limit to be 4 0s.
+that in mind, I've set the limit to 4.
 
-The hash functions repeatedly calculates the hashes in order until it finds one
+The hash function repeatedly calculates the hashes in order until it finds one
 which satisfies the restriction.
 
 ``` Go
@@ -46,7 +88,7 @@ hash generation.
 
 ### Block structure
 
-The `block` structure defined as follows.
+The `block` structure is defined as follows.
 ``` Go
 type Block struct {
        Timestamp  	int64		/* Time of block creation */
@@ -58,10 +100,10 @@ type Block struct {
 ```
 
 ### Proof of Work
-POF is important in a sense that it enables us to validate whether the existing
+POW is important in a sense that it enables us to validate whether the existing
 transactions are frivolous or are they actually correct. The Proof of Work algorithm
 validates whether the individual instances of every block satisfies the length
-restriction and that the sha256 of its data and timestamp is correct.
+restriction and that the sha256 of its data and timestamp is matches the pre-computed value.
 
 This is what the output looks like in case all transactions are valid.
 
@@ -97,43 +139,22 @@ Hash: 0000174cb32178ef254fe3286ca60cfc449890ac347862a3e0b663404c4717ef
 Valid PoW: true
 
 ```
+<br/>
 
-## Blockchain-CLI
+### TODO Implementations
+* Extract unspent coins
+* Network interaction
+* Bitcoin client nodes
+* Private wallets
 
-The functionality to create custom transactions and store them as a ledger was
-introduced after [66b9b8d](https://github.com/aniketp/blockchain/tree/66b9b8d9d4728b12bd4bb8a940f9fd6ea6485163).
+### Credits
+Thanks to the wonderful Golang documentation obviously! Apart from it, ideas were
+picked up from these sources.
 
-### Dependencies
-```
- $ go get github.com/boltdb/bolt
- $ go get github.com/eiannone/keyboard
-```
+* [The Bitcoin Paper](https://bitcoin.org/bitcoin.pdf)
+* [Blockchain.com](https://bitcoin.org/bitcoin.pdf)
+* [Medium/Proof of Stake blockchain ](https://medium.com/@mycoralhealth/code-your-own-proof-of-stake-blockchain-in-go-610cd99aa658)
+* [Medium/Code your own blockchain](https://medium.com/@mycoralhealth/code-your-own-blockchain-in-less-than-200-lines-of-go-e296282bcffc)
 
-### Usage
-``` bash
-Usage: blockchain [addblock] [printchain ...]
-```
-Initialize a blockchain database. Then add blocks or view the existing records.
-``` bash
- ▶ ./blockchain addblock -data "Gangadhar he Shaktimaan hai"
- Mining the block containing "Genesis Block"
- 00001296932b2c21660b44e6d61e90f2b8733ea6de3cd50ab605acdfc4499e49
-
- Mining the block containing "Gangadhar he Shaktimaan hai"
- 000010f6cd380c3440cb0d9254f044569e4c67f444306d709f3c70180b4fff32
-
- Success!
-```
-``` bash
- ▶ ./blockchain printchain
- Prev. hash: 00001296932b2c21660b44e6d61e90f2b8733ea6de3cd50ab605acdfc4499e49
- Data: Gangadhar he Shaktimaan hai
- Hash: 000010f6cd380c3440cb0d9254f044569e4c67f444306d709f3c70180b4fff32
- PoW: true
-
- Prev. hash:
- Data: Genesis Block
- Hash: 00001296932b2c21660b44e6d61e90f2b8733ea6de3cd50ab605acdfc4499e49
- PoW: true
-
-```
+### Feeling Naughty?
+Set `targetBits` in [utils.go](utils.go) as something above 20 (say 25) and watch your CPU blow up :stuck_out_tongue:
